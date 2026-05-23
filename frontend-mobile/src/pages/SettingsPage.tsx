@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { getStats, type Stats } from '../db'
-import { useBluetooth } from '../hooks/useBluetooth'
 
 const SHOP_ITEMS = [
   { name: '手冲咖啡一杯', points: 200, emoji: '☕' },
@@ -12,7 +11,6 @@ const SHOP_ITEMS = [
 export function SettingsPage() {
   const [stats, setStats]     = useState<Stats | null>(null)
   const [showShop, setShowShop] = useState(false)
-  const { connected, connecting, connect } = useBluetooth(() => {})
 
   useEffect(() => { getStats().then(setStats) }, [])
 
@@ -20,22 +18,13 @@ export function SettingsPage() {
     <div style={{ padding: '0 16px 24px' }}>
       <h1 className="page-header" style={{ padding: '20px 0 20px' }}>设置</h1>
 
-      {/* 蓝牙 */}
+      {/* 硬件连接说明 */}
       <div className="card" style={{ marginBottom: 12 }}>
-        <p style={{ fontWeight: 600, marginBottom: 12 }}>硬件连接</p>
-        <button
-          className={`btn ${connected ? 'btn-ghost' : 'btn-primary'}`}
-          style={{ width: '100%' }}
-          onClick={connect}
-          disabled={connecting || connected}
-        >
-          {connecting ? '连接中…' : connected ? '✓ 设备已连接' : '连接 ADHD 蜂鸣器'}
-        </button>
-        {connected && (
-          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8, textAlign: 'center' }}>
-            轻拍设备可完成任务并获得鼓励
-          </p>
-        )}
+        <p style={{ fontWeight: 600, marginBottom: 8 }}>硬件连接</p>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+          设备通过 WiFi 自动连接，无需手动操作。<br />
+          ESP32 上电后会自动与 App 建立连接，连接状态可在专注页查看。
+        </p>
       </div>
 
       {/* 积分 + 商城 */}
