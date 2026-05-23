@@ -10,6 +10,7 @@ const client = new OpenAI({
 router.post('/', async (req, res) => {
   const { text } = req.body;
   if (!text) return res.status(400).json({ error: 'text required' });
+  if (text.length > 1000) return res.status(400).json({ error: '输入过长，请控制在 1000 字以内' });
 
   try {
     console.log('[organize] 收到文本:', text.substring(0, 100));
@@ -58,7 +59,7 @@ router.post('/', async (req, res) => {
     res.json(result);
   } catch (err) {
     console.error('[organize] error:', err.message);
-    res.status(500).json({ error: 'AI request failed', detail: err.message });
+    res.status(500).json({ error: 'AI request failed' });
   }
 });
 

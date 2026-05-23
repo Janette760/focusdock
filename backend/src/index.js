@@ -4,6 +4,7 @@ const cors = require('cors');
 const http = require('http');
 const path = require('path');
 const { WebSocketServer } = require('ws');
+const rateLimit = require('express-rate-limit');
 const { handleSttWs } = require('./ws/sttHandler');
 const { handleAppWs, handleDeviceWs } = require('./ws/deviceHub');
 
@@ -11,6 +12,18 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// LLM/STT 接口限流：每个 IP 每分钟最多 20 次
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: '请求过于频繁，请稍后再试' },
+});
+app.use('/api/organize', apiLimiter);
+app.use('/api/encourage', apiLimiter);
+app.use('/api/stt', apiLimiter);
 
 // HTTP API 路由
 app.use('/api/organize', require('./routes/organize'));
@@ -41,6 +54,13 @@ server.on('upgrade', (request, socket, head) => {
       handleAppWs(ws);
     });
   } else if (pathname === '/ws/device') {
+    // ESP32 必须携带设备密钥
+    const params = new URL(request.url, `http://${request.headers.host}`).searchParams;
+    if (params.get('secret') !== process.env.DEVICE_SECRET) {
+      socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+      socket.destroy();
+      return;
+    }
     wss.handleUpgrade(request, socket, head, (ws) => {
       handleDeviceWs(ws);
     });
