@@ -2,16 +2,16 @@ const express = require('express');
 const OpenAI = require('openai');
 const router = express.Router();
 
-const client = new OpenAI({
-  apiKey: process.env.LLM_API_KEY,
-  baseURL: process.env.LLM_BASE_URL,
-});
+function getClient() {
+  if (!process.env.LLM_API_KEY) throw new Error('LLM_API_KEY is not configured');
+  return new OpenAI({ apiKey: process.env.LLM_API_KEY, baseURL: process.env.LLM_BASE_URL });
+}
 
 router.post('/', async (req, res) => {
   const { task, duration } = req.body;
 
   try {
-    const completion = await client.chat.completions.create({
+    const completion = await getClient().chat.completions.create({
       model: process.env.LLM_MODEL,
       messages: [
         {
